@@ -17,6 +17,12 @@ namespace PinSharp.Api
             return GetAsync<T>($"boards/{board}", new RequestOptions(fields));
         }
 
+        public Task<PagedResponse<IPin>> GetPinsOnSectionAsync(string board, string section)
+        {
+            var responseTask = GetPagedAsync<IPin>($"boards/{board}/sections/{section}/pins");
+            return PagedResponse<IPin>.FromTask(responseTask);
+        }
+
         public Task<PagedResponse<IPin>> GetPinsAsync(string board)
         {
             return GetPinsAsync<IPin>(board, PinFields, null, 0);
@@ -60,7 +66,12 @@ namespace PinSharp.Api
 
         public Task<IDetailedBoard> CreateBoardAsync(string name, string description = null)
         {
-            return PostAsync<IDetailedBoard>("boards", new {name, description}, new RequestOptions(BoardFields));
+            return PostAsync<IDetailedBoard>("boards", new {name, description});
+        }
+
+        public Task<IDetailedBoard> CreateBoardSectionAsync(string parentId, string name, string description = null)
+        {
+            return PostAsync<IDetailedBoard>($"boards/{parentId}/sections", new { name, description });
         }
 
         public Task<IDetailedBoard> UpdateBoardAsync(string board, string name, string description = null)

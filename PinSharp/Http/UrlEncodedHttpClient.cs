@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using PinSharp.Extensions;
 
 namespace PinSharp.Http
@@ -12,9 +13,11 @@ namespace PinSharp.Http
     public class UrlEncodedHttpClient : IHttpClient
     {
         private HttpClient Client { get; }
+        private string refreshToken { get; }
 
-        public UrlEncodedHttpClient(string baseAddress, string accessToken)
+        public UrlEncodedHttpClient(string baseAddress, string accessToken, string refreshToken)
         {
+            this.refreshToken = refreshToken;
             var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
@@ -37,7 +40,9 @@ namespace PinSharp.Http
 
         public virtual Task<HttpResponseMessage> PostAsync<T>(string requestUri, T value)
         {
-            var content = GetFormUrlEncodedContent(value);
+            var data = JsonConvert.SerializeObject(value);
+            var content = new StringContent(data);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             return Client.PostAsync(requestUri, content);
         }
 

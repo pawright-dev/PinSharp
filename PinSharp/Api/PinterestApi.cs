@@ -25,9 +25,9 @@ namespace PinSharp.Api
 
         public IRateLimits RateLimits { get; private set; }
 
-        internal PinterestApi(string accessToken, string apiVersion)
+        internal PinterestApi(string accessToken, string refreshToken)
         {
-            Client = new UrlEncodedHttpClient($"{BaseUrl}/{apiVersion}/", accessToken);
+            Client = new UrlEncodedHttpClient($"{BaseUrl}/v5/", accessToken, refreshToken);
         }
 
         internal PinterestApi(IHttpClient httpClient)
@@ -83,7 +83,7 @@ namespace PinSharp.Api
         private async Task<T> PostAsync<T>(string path, object value, RequestOptions options = null)
         {
             var content = await PostAsyncInternal(path, value, options).ConfigureAwait(false);
-            return JsonConvert.DeserializeObject<T>(content.data.ToString());
+            return JsonConvert.DeserializeObject<T>(content.ToString());
         }
 
         private async Task<dynamic> PostAsyncInternal(string path, object value, RequestOptions options = null)
@@ -92,6 +92,7 @@ namespace PinSharp.Api
 
             using (var response = await Client.PostAsync(path, value).ConfigureAwait(false))
             {
+                var s = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 UpdateRateLimits(response.Headers);
 
                 if (!response.IsSuccessStatusCode)
@@ -143,7 +144,7 @@ namespace PinSharp.Api
                 if (RateLimits?.LastUpdated >= now)
                     return;
 
-                RateLimits = new RateLimits(int.Parse(limit), int.Parse(remaining), now);
+                RateLimits = new RateLimits(int.Parse(string.Join("", limit.TakeWhile(c => char.IsDigit(c)))), int.Parse(remaining), now);
             }
         }
 

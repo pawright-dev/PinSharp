@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using PinSharp.Api;
 using PinSharp.Extensions;
@@ -14,7 +16,8 @@ namespace PinSharp
     /// </summary>
     public static class PinSharpAuthClient
     {
-        private const string BaseUrl = "https://api.pinterest.com/";
+        private const string BaseUrl = "https://www.pinterest.com/";
+        private const string ApiUrl = "https://api.pinterest.com/";
 
         /// <summary>
         /// <para>
@@ -40,9 +43,9 @@ namespace PinSharp
         /// </param>
         /// <param name="scopes">The scopes you want to request from the user.</param>
         /// <returns></returns>
-        public static string BuildAuthorizationUrl(string clientId, string redirectUri, Scopes scopes)
+        public static string BuildAuthorizationUrl(string clientId, string redirectUri, params Scopes[] scopes)
         {
-            return BuildAuthorizationUrl(clientId, redirectUri, scopes, CreateRandomState());
+            return BuildAuthorizationUrl(clientId, redirectUri, CreateRandomState(), scopes);
         }
 
         /// <summary>
@@ -68,7 +71,7 @@ namespace PinSharp
         /// <param name="scopes">The scopes you want to request from the user.</param>
         /// <param name="state">A string that is added to <paramref name="redirectUri"/> as query string parameter "state". This is to prevent spoofing.</param>
         /// <returns></returns>
-        public static string BuildAuthorizationUrl(string clientId, string redirectUri, Scopes scopes, string state)
+        public static string BuildAuthorizationUrl(string clientId, string redirectUri, string state, params Scopes[] scopes)
         {
             var scope = GetScope(scopes);
 
@@ -81,18 +84,27 @@ namespace PinSharp
         /// <param name="clientId">The Client ID (also known as App ID) of your app. See https://developers.pinterest.com/apps/</param>
         /// <param name="clientSecret">The Client secret (also known as App secret) of your app. See https://developers.pinterest.com/apps/</param>
         /// <param name="code">The code that was passed to your <c>redirectUri</c> as a query string parameter.</param>
-        /// <param name="apiVersion">The API version. Defaults to "v1" if left out.</param>
+        /// <param name="redirectUrl">The redirect URI needed for the pinterest API.</param>
         /// <returns>An access token for use with <see cref="PinSharpClient"/>.</returns>
-        public static async Task<string> GetAccessTokenAsync(string clientId, string clientSecret, string code, string apiVersion = "v1")
+        public static async Task<Models.IUser> GetAccessTokenAsync(string clientId, string clientSecret, string code, string redirectUrl)
         {
-            var url = $"{BaseUrl}{apiVersion}/oauth/token?grant_type=authorization_code&client_id={clientId}&client_secret={clientSecret}&code={code}";
+            var url = $"{ApiUrl}v5/oauth/token";
 
             var client = new HttpClient();
-            var response = await client.PostAsync(url, null).ConfigureAwait(false);
+            var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(clientId + ":" + clientSecret));
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            var dict = new Dictionary<string, string>();
+            dict.Add("code", code);
+            dict.Add("grant_type", "authorization_code");
+            dict.Add("redirect_uri", redirectUrl);
+            var content = new FormUrlEncodedContent(dict);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            request.Content = content;
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+            var response = await client.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsAsync<dynamic>().ConfigureAwait(false);
-            return json.access_token;
+            var user = await response.Content.ReadAsAsync<Models.User>().ConfigureAwait(false);
+            return user;
         }
 
         /// <summary>
@@ -115,21 +127,39 @@ namespace PinSharp
             return BitConverter.ToString(data).Replace("-", "").ToLower();
         }
 
-        private static string GetScope(Scopes scopes)
+        private static string GetScope(params Scopes[] scopes)
         {
             var values = new List<string>();
 
-            if (scopes.HasFlag(Scopes.ReadPublic))
-                values.Add("read_public");
+            if (scopes.Contains(Scopes.AdsRead))
+                values.Add("ads:read");
 
-            if (scopes.HasFlag(Scopes.WritePublic))
-                values.Add("write_public");
+            if (scopes.Contains(Scopes.BoardsRead))
+                values.Add("boards:read");
 
-            if (scopes.HasFlag(Scopes.ReadRelationships))
-                values.Add("read_relationships");
+            if (scopes.Contains(Scopes.BoardsReadSecret))
+                values.Add("boards:read_secret");
 
-            if (scopes.HasFlag(Scopes.WriteRelationships))
-                values.Add("write_relationships");
+            if (scopes.Contains(Scopes.BoardsWrite))
+                values.Add("boards:write");
+
+            if (scopes.Contains(Scopes.BoardsWriteSecret))
+                values.Add("boards:write_secret");
+
+            if (scopes.Contains(Scopes.PinsRead))
+                values.Add("pins:read");
+
+            if (scopes.Contains(Scopes.PinsReadSecret))
+                values.Add("pins:read_secret");
+
+            if (scopes.Contains(Scopes.PinsWrite))
+                values.Add("pins:write");
+
+            if (scopes.Contains(Scopes.PinsWriteSecret))
+                values.Add("pins:write_secret");
+
+            if (scopes.Contains(Scopes.UserAccountsRead))
+                values.Add("user_accounts:read");
 
             return string.Join(",", values);
         }

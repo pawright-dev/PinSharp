@@ -24,12 +24,12 @@ namespace PinSharp.Api
             return GetAsync<IPin>($"pins/{id}", new RequestOptions(PinFields));
         }
 
-        public Task<IPin> CreatePinAsync(string board, string imageUrl, string note, string link = null)
+        public async Task<string> CreatePinAsync(string board, string imageUrl, string note, string link = null, string section = null)
         {
             if (!IsValidUrl(imageUrl))
                 throw new ArgumentException($"'{imageUrl}' is not a valid URL", nameof(imageUrl));
-
-            return PostAsync<IPin>("pins", new {board, note, link, image_url = imageUrl}, new RequestOptions(PinFields));
+            var type = imageUrl.Split('.').LastOrDefault();
+            return (await PostAsync<dynamic>("pins", new { board_id = board, title = note, link = link, board_section_id = section, media_source = new { source_type = "image_url", url = imageUrl } })).id;
         }
 
         public Task<IPin> CreatePinFromBase64Async(string board, string imageBase64, string note, string link = null)

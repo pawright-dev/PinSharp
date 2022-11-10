@@ -17,7 +17,7 @@ namespace PinSharp.Api
         /// <param name="note"></param>
         /// <param name="link"></param>
         /// <returns></returns>
-        Task<IPin> CreatePinAsync(string board, string imageUrl, string note, string link = null);
+        Task<string> CreatePinAsync(string board, string imageUrl, string note, string link = null, string section = null);
 
         /// <summary>
         ///

@@ -23,6 +23,10 @@ namespace PinSharp.Models
 
         //[JsonProperty("image")]
         IUserImageList Images { get; set; }
+
+        string AccessToken { get; set; }
+
+        string RefreshToken { get; set; }
     }
 
     [JsonConverter(typeof(InterfaceConverter<User>))]

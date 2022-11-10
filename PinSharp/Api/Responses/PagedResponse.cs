@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PinSharp.Api.Responses
@@ -14,7 +15,7 @@ namespace PinSharp.Api.Responses
 
         public PagedResponse(IEnumerable<T> pins, string cursor)
         {
-            Items = new List<T>(pins);
+            Items = new List<T>(pins ?? Enumerable.Empty<T>());
             NextPageCursor = cursor;
         }
 
