@@ -30,11 +30,5 @@ namespace PinSharp.Models
         public string OriginalLink { get; set; }
 
         public string Color { get; set; }
-
-        public IDictionary<string, string> Media { get; set; }
-
-        public IDictionary<string, dynamic> Attribution { get; set; }
-
-        public IDictionary<string, dynamic> Metadata { get; set; }
     }
 }

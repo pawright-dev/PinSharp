@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using PinSharp.Api.Responses;
 using PinSharp.Models;
@@ -7,6 +8,16 @@ namespace PinSharp.Api
 {
     internal partial class PinterestApi : IBoardsApi
     {
+        public Task<IBoardSections> GetBoardSectionsAsync(string board)
+        {
+            return GetBoardSectionsAsync<IBoardSections>(board, Enumerable.Empty<string>());
+        }
+
+        public Task<T> GetBoardSectionsAsync<T>(string board, IEnumerable<string> fields)
+        {
+            return GetAsync<T>($"boards/{board}/sections", new RequestOptions(fields));
+        }
+
         public Task<IDetailedBoard> GetBoardAsync(string board)
         {
             return GetBoardAsync<IDetailedBoard>(board, BoardFields);

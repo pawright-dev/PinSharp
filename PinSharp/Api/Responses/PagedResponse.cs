@@ -19,12 +19,12 @@ namespace PinSharp.Api.Responses
             NextPageCursor = cursor;
         }
 
-        internal static async Task<PagedResponse<T>> FromTask(Task<PagedApiResponse<IEnumerable<T>>> task)
+        internal static async Task<PagedResponse<T>> FromTask(Task<PagedApiResponse<T>> task)
         {
             var response = await task.ConfigureAwait(false);
             if (response == null)
                 return null;
-            return new PagedResponse<T>(response.Data, response.Page?.Cursor);
+            return new PagedResponse<T>(response.Items, response.Bookmark);
         }
 
         public string NextPageCursor { get; set; }

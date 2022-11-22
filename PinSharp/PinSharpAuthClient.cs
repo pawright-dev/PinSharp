@@ -108,6 +108,35 @@ namespace PinSharp
         }
 
         /// <summary>
+        /// Gets an access token which you can then use with <see cref="PinSharpClient"/>.
+        /// </summary>
+        /// <param name="clientId">The Client ID (also known as App ID) of your app. See https://developers.pinterest.com/apps/</param>
+        /// <param name="clientSecret">The Client secret (also known as App secret) of your app. See https://developers.pinterest.com/apps/</param>
+        /// <param name="refreshToken">The refresh token from Pinterest. See https://developers.pinterest.com/apps/</param>
+        /// <returns>An access token for use with <see cref="PinSharpClient"/>.</returns>
+        public static async Task<Models.IUser> RefreshAccessTokenAsync(string clientId, string clientSecret, string refreshToken)
+        {
+            var url = $"{ApiUrl}v5/oauth/token";
+
+            var client = new HttpClient();
+            var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(clientId + ":" + clientSecret));
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            var dict = new Dictionary<string, string>
+            {
+                { "grant_type", "refresh_token" },
+                { "refresh_token", refreshToken }
+            };
+            var content = new FormUrlEncodedContent(dict);
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            request.Content = content;
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+            var response = await client.SendAsync(request).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+            var user = await response.Content.ReadAsAsync<Models.User>().ConfigureAwait(false);
+            return user;
+        }
+
+        /// <summary>
         /// Generates a random string that you can use to verify that
         /// the redirect back to your site or app wasn't spoofed.
         ///

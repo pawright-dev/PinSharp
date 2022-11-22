@@ -50,13 +50,13 @@ namespace PinSharp.Api
                 if (!response.IsSuccessStatusCode)
                     throw await CreateException(response).ConfigureAwait(false);
 
-                var content = await response.Content.ReadAsAsync<dynamic>().ConfigureAwait(false);
-                return JsonConvert.DeserializeObject<T>(content.data.ToString());
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return JsonConvert.DeserializeObject<T>(content.ToString());
             }
         }
 
         // TODO: NOTE: Returns null if not found (404)
-        private async Task<PagedApiResponse<IEnumerable<T>>> GetPagedAsync<T>(string path, RequestOptions options = null)
+        private async Task<PagedApiResponse<T>> GetPagedAsync<T>(string path, RequestOptions options = null)
         {
             path = PathBuilder.BuildPath(path, options);
 
@@ -71,7 +71,7 @@ namespace PinSharp.Api
                     throw await CreateException(response).ConfigureAwait(false);
 
                 var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return JsonConvert.DeserializeObject<PagedApiResponse<IEnumerable<T>>>(content);
+                return JsonConvert.DeserializeObject<PagedApiResponse<T>>(content);
             }
         }
 

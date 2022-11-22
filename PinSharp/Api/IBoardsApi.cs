@@ -7,6 +7,8 @@ namespace PinSharp.Api
 {
     public interface IBoardsApi
     {
+        Task<IBoardSections> GetBoardSectionsAsync(string board);
+        Task<T> GetBoardSectionsAsync<T>(string board, IEnumerable<string> fields);
         Task<IDetailedBoard> GetBoardAsync(string board);
         Task<T> GetBoardAsync<T>(string board, IEnumerable<string> fields);
 

@@ -29,12 +29,6 @@ namespace PinSharp.Models
         string OriginalLink { get; set; }
 
         string Color { get; set; }
-
-        IDictionary<string, string> Media { get; set; }
-
-        IDictionary<string, dynamic> Attribution { get; set; }
-
-        IDictionary<string, dynamic> Metadata { get; set; }
     }
 
     [JsonConverter(typeof(InterfaceConverter<Pin>))]
